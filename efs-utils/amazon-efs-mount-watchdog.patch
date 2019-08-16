@@ -1,0 +1,19 @@
+Author: Andrew Jaquith
+Summary: Fixes code to run under Python 3
+--- src/efs-utils-1.12/src/watchdog/__init__.py	2019-08-15 15:53:14.000000000 -0400
++++ patch-src/amazon-efs-mount-watchdog.py	2019-08-15 14:20:18.000000000 -0400
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/python3
+ #
+ # Copyright 2017-2018 Amazon.com, Inc. and its affiliates. All Rights Reserved.
+ #
+@@ -280,7 +280,7 @@ def assert_root():
+ 
+ 
+ def read_config(config_file=CONFIG_FILE):
+-    p = ConfigParser.SafeConfigParser()
++    p = ConfigParser()
+     p.read(config_file)
+     return p
+ 
