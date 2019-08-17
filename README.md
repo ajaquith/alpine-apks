@@ -10,9 +10,7 @@ Add my repository to `/etc/apk/repositories`:
 
 Add one or more packages:
 
-        apk add --allow-untrusted efs-utils@arj
-
-_Note: the `--allow-untrusted` option is temporary._
+        apk add efs-utils@arj
 
 ## efs-utils
 

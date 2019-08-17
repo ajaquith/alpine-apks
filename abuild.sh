@@ -37,6 +37,7 @@ docker run \
         -e RSA_PRIVATE_KEY_NAME="alpine-devel@markerbench.com-5d56c244.rsa" \
         -e RSA_PUBLIC_KEY="$(cat ~/.ssh/alpine/alpine-devel@markerbench.com-5d56c244.rsa.pub)" \
         -e RSA_PUBLIC_KEY_NAME="alpine-devel@markerbench.com-5d56c244.rsa.pub" \
+        -e PACKAGER_PUBKEY="alpine-devel@markerbench.com-5d56c244.rsa.pub" \
         -v $PWD/$1:/package \
         -v $PWD/packages/:/packages \
         -v $PWD/etc/apk/keys:/etc/apk/keys \
