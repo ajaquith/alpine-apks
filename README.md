@@ -2,6 +2,18 @@
 
 Project containing custom Alpine Linux packages (APKs).
 
+To install, add my [public key](alpine-devel@markerbench.com-5d56c244.rsa.pub) to `/etc/apk/keys` on the Alpine box.
+
+Add my repository to `/etc/apk/repositories`:
+
+        @arj http://alpine-apks.markerbench.com
+
+Add one or more packages:
+
+        apk add --allow-untrusted efs-utils@arj
+
+_Note: the `--allow-untrusted` option is temporary._
+
 ## efs-utils
 
 This package is an Alpine build of Amazon's `[efs-utils](https://github.com/aws/efs-utils)` package, which allows Amazon Machine Images to mount Elastic File System volumes. EFS volumes are essentially NFS mounts. But because NFS traffic is not encrypted, `efs-utils` provides a special `mount.efs` helper and watchdog daemon that create and tear down SSL tunnels to EFS hosts. Both the mount helper and accompanying watchdog daemon are written in Python are are simple to configure.
@@ -42,6 +54,34 @@ To rebuild from scratch:
         ./abuild.sh efs-utils cleanpkg
         ./abuild.sh efs-utils
 
+To push the APK packages to the public webhost (on Amazon S3):
+
+        ./deploy.sh
+
 Because this package repository is an untrusted (private) repository, as the Docker container bind-mounts the `etc/apk/keys` project subdirectory into the container as `/etc/apk/keys`. This mount includes the current public keys used for the various Alpine public repos, plus the public key for this private repo. This allows the APKs to build normally without error.
 
 The container has the unfortunate habit of copying my APK signing keys into its `config` directory, which is bind-mounted into the project directory at build time. However, we add the `conf` directory to `.gitignore` so that it doesn't show up in the Git tree.
+
+## Prerequisites
+
+### Repository storage
+
+The Alpine repository is hosted in an Amazon Web Services S3 bucket called `[alpine-apks.markerbench.com](http://alpine-apks.markerbench.com)` with an URL of the same name. This bucket is configured as a static website with all "block public access" flags turned off to make it accessible to all. It has the following bucket policy applied to it as [described on Stack Overflow](https://stackoverflow.com/questions/7420209/amazon-s3-permission-problem-how-to-set-permissions-for-all-files-at-once):
+
+        {
+            "Version": "2008-10-17",
+            "Id": "http better policy",
+            "Statement": [
+                {
+                    "Sid": "readonly policy",
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:GetObject",
+                    "Resource": "arn:aws:s3:::alpine-apks.markerbench.com/*"
+                }
+            ]
+        }
+
+The root of the bucket contains a stub `index.html`. It has a subfolder called `x86_64` that contains the Alpine package index `APKINDEX.tar.gz`, as well as the `.apk` files created by the project. The bucket does not log access or version its contents because it is just a dumb bucket of bits and it is versioned in Git.
+
+The bucket's full URL is `http://alpine-apks.markerbench.com.s3-website-us-east-1.amazonaws.com`. To make accessing it easier, the `markerbench.com` domain has a `CNAME` record containing the value of the full URL.
