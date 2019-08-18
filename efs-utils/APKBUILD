@@ -17,16 +17,15 @@ install="$pkgname.post-install
          $pkgname.post-deinstall"
 subpackages="$pkgname-doc"
 source="$pkgname-$pkgver.tar.gz::https://github.com/aws/efs-utils/archive/v$pkgver.tar.gz
-        amazon-efs-mount-watchdog.initd
-        amazon-efs-mount-watchdog.patch
-        mount.efs.patch"
+        etc/init.d/amazon-efs-mount-watchdog
+        patch/amazon-efs-mount-watchdog.patch
+        patch/mount.efs.patch"
 builddir="$srcdir/$pkgname-$pkgver"
 
 prepare() {
   echo 'Patching application files'
-  cd "$srcdir"
-  patch -p1 -i "$srcdir"/amazon-efs-mount-watchdog.patch
-  patch -p1 -i "$srcdir"/mount.efs.patch
+  patch -p1 -i "$startdir"/patch/amazon-efs-mount-watchdog.patch
+  patch -p1 -i "$startdir"/patch/mount.efs.patch
 }
 
 package() {
@@ -44,7 +43,7 @@ package() {
   install -Dm444 "$builddir"/dist/efs-utils.crt "$pkgdir"/etc/amazon/efs/
   install -Dm755 "$builddir"/src/watchdog/__init__.py "$pkgdir"/usr/bin/amazon-efs-mount-watchdog
   install -Dm755 "$builddir"/src/mount_efs/__init__.py "$pkgdir"/sbin/mount.efs
-  install -Dm755 amazon-efs-mount-watchdog.initd "$pkgdir"/etc/init.d/amazon-efs-mount-watchdog
+  install -Dm755 etc/init.d/amazon-efs-mount-watchdog "$pkgdir"/etc/init.d/amazon-efs-mount-watchdog
   sed -i "s/{{ aws_efs_version }}/$pkgver/" "$pkgdir"/etc/init.d/amazon-efs-mount-watchdog
   
   echo 'Copying documentation files'
@@ -54,8 +53,7 @@ package() {
   install -Dm644 "$builddir"/LICENSE "$pkgdir"/usr/share/licenses/LICENSE-"$pkgname-$pkgver"
   install -Dm644 "$builddir"/man/mount.efs.8 "$pkgdir"/usr/share/man/man8/
 }
-
 sha512sums="e1b0612a46cfcadad12357e483a2fb2d42680f24107b78156506f2cee17cbb74092a64070abaea5e860fc084f36a57517f06d7191e708be925970bc21a38bc2c  efs-utils-1.12.tar.gz
-d7032fb5af15d27d3850f32f628be5af23e33330143c31277a062de7c69868613268f729881febf8f14bca315352182832046521f2e4847bec1ddd8dccdf6903  amazon-efs-mount-watchdog.initd
-04868b561f8c6e04a81ef8ad6be69d51effa1ec1b8eab91f82316a4652dccf32e3c0c9cc6d651866d828fe6476f2b69fa871cb2f5a4839b3892f3b442f7bf5f2  amazon-efs-mount-watchdog.patch
-028a8c555ba590c6134c87332a643e9c019b565eaee7bc2abd93e3507258bfc244d2da2c71fe05d2b2c0338ba620460e2799c151054c9fad963ec3446fbe2242  mount.efs.patch"
+d7032fb5af15d27d3850f32f628be5af23e33330143c31277a062de7c69868613268f729881febf8f14bca315352182832046521f2e4847bec1ddd8dccdf6903  amazon-efs-mount-watchdog
+e3efd1d0a2c6ea8d3a8dde28fede0cd93e87005181052e037f31e25c5e1c0d104ce660613fee9ee1a112ff6f1eddf252905a7f77d1e04b9aac8b63634a71316f  amazon-efs-mount-watchdog.patch
+02b16c6bb618e7a5e43f96ff8b3c752d3c4f7bfb51620905b3499600d4c46c40e1fd822773f9556f502bb22b8f9376e6f1c45e7f46506054919df9b0f2bf77cf  mount.efs.patch"
