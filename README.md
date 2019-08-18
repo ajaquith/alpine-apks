@@ -14,7 +14,7 @@ Add one or more packages:
 
 ## efs-utils
 
-This package is an Alpine build of Amazon's [`efs-utils`](https://github.com/aws/efs-utils)` package, which allows Amazon Machine Images to mount Elastic File System volumes. EFS volumes are essentially NFS mounts. But because NFS traffic is not encrypted, `efs-utils` provides a special `mount.efs` helper and watchdog daemon that create and tear down SSL tunnels to EFS hosts. Both the mount helper and accompanying watchdog daemon are written in Python are are simple to configure.
+This package is an Alpine build of Amazon's [`efs-utils`](https://github.com/aws/efs-utils) package, which allows Amazon Machine Images to mount Elastic File System volumes. EFS volumes are essentially NFS mounts. But because NFS traffic is not encrypted, `efs-utils` provides a special `mount.efs` helper and watchdog daemon that create and tear down SSL tunnels to EFS hosts. Both the mount helper and accompanying watchdog daemon are written in Python are are simple to configure.
 
 The `efs-utils` package provided by Amazon supports Ubuntu, Centos and Debian, but not Alpine. So this package gently modifies the watchdog (`/usr/bin/amazon-efs-mount-watchdog`) and mount helper (`/sbin/mount.efs`). The patch applied to the watchdog enables it to run under Python 3. The patch applied to the mount helper does the same, but also adds the ability to detect Alpine-based systems.
 
@@ -26,7 +26,7 @@ Once installed, EFS volumes can be mounted by Alpine hosts this way:
 
         file-system-id efs-mount-point efs _netdev,tls 0 0
 
-...where _`file-system-id`_ is the EFS volume ID and _efs-mount-point_ is the mount point, eg `/opt/foo`.
+...where _file-system-id_ is the EFS volume ID and _efs-mount-point_ is the mount point, _eg_ `/opt/foo`.
 
 # Building packages
 
@@ -58,9 +58,9 @@ To push the APK packages to the public webhost (on Amazon S3):
 
         ./deploy.sh
 
-Because this package repository is an untrusted (private) repository, as the Docker container bind-mounts the `etc/apk/keys` project subdirectory into the container as `/etc/apk/keys`. This mount includes the current public keys used for the various Alpine public repos, plus the public key for this private repo. This allows the APKs to build normally without error.
+Because this package repository is an untrusted (private) repository, `abuild` must be made to trust it. To do this, we bind-mount the `etc/apk/keys` project subdirectory into the Docker container as `/etc/apk/keys`. This directory includes the current public keys used for the various Alpine public repos, _plus_ the public key for this private repo. This allows the APKs to build successfully without error.
 
-The container has the unfortunate habit of copying my APK signing keys into its `config` directory, which is bind-mounted into the project directory at build time. However, we add the `conf` directory to `.gitignore` so that it doesn't show up in the Git tree.
+The entire project directory is bind-mounted into the Docker container as `/package` so that `abuild` can modify files in it. Unfortunately, in the process of doing its work, `abuild` copies the APK signing key into its `config` directory. To prevent disclosure of the key, we add the entire `config` directory to `.gitignore`.
 
 ## Prerequisites
 
