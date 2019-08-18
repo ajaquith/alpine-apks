@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+/sbin/service --ifstarted amazon-efs-mount-watchdog stop &> /dev/null || true
+/sbin/rc-update del amazon-efs-mount-watchdog &> /dev/null || true
