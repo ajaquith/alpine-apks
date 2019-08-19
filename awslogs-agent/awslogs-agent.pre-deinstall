@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+/sbin/service --ifstarted awslogs stop &> /dev/null || true
+/sbin/rc-update del awslogs &> /dev/null || true
+
+# Stop cron job
+croncmd="logrotate -s /var/log/logstatus /etc/logrotate.d/awslogs"
+( crontab -l | grep -v -F "$croncmd" ) | crontab -
+
+# Remove state file
+rm -Rf /var/awslogs/state

@@ -4,6 +4,19 @@
 # https://stackoverflow.com/questions/878600/how-to-create-a-cron-job-using-bash-automatically-without-the-interactive-editor
 #
 set -e
+
+# Create cron job to rotate logs
 croncmd='logrotate -s /var/log/logstatus /etc/logrotate.d/awslogs'
 cronjob='30 * * * *'
 ( crontab -l | grep -v -F "$croncmd" ; echo "$cronjob $croncmd" ) | crontab -
+
+# Check for existence of config files; warn if not present.
+if [ ! -e "/var/awslogs/etc/aws.conf" ]; then
+    echo "WARNING: AWS config /var/awslogs/etc/aws.conf does not exist. See the .example config."
+fi 
+if [ ! -e "/var/awslogs/etc/awslogs.conf" ]; then
+    echo "WARNING: AWS CloudWatch Logs Agent config /var/awslogs/etc/aws.conf does not exist. See the .example config."
+fi 
+
+# Restart daemon if already started
+/sbin/service --ifstarted awslogs restart &> /dev/null || true

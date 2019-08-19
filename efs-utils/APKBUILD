@@ -3,7 +3,7 @@
 pkgname=efs-utils
 pkgver=1.12
 pkgrel=0
-pkgdesc="Amazon Web Services Elastic File System Agent for Alpine 
+pkgdesc="Amazon Web Services Elastic File System Agent
 Linux."
 url="https://github.com/ajaquith/alpine-apks"
 arch="noarch"
@@ -23,13 +23,14 @@ source="$pkgname-$pkgver.tar.gz::https://github.com/aws/efs-utils/archive/v$pkgv
 builddir="$srcdir/$pkgname-$pkgver"
 
 prepare() {
-  echo 'Patching application files'
-  patch -p1 -i "$startdir"/patch/amazon-efs-mount-watchdog.patch
-  patch -p1 -i "$startdir"/patch/mount.efs.patch
+  printf 'Patching application files: '
+  patch -s -p1 -i "$startdir"/patch/amazon-efs-mount-watchdog.patch
+  patch -s -p1 -i "$startdir"/patch/mount.efs.patch
+  printf 'OK\n'
 }
 
 package() {
-  echo 'Creating application directories'
+  printf 'Creating package directories: '
   mkdir -p "$pkgdir"/etc/amazon/efs
   mkdir -p "$pkgdir"/etc/init.d
   mkdir -p "$pkgdir"/sbin
@@ -37,21 +38,24 @@ package() {
   mkdir -p "$pkgdir"/usr/share/man/man8
   mkdir -p "$pkgdir"/usr/share/licenses
   mkdir -p "$pkgdir"/usr/share/info
+  printf 'OK\n'
 
-  echo 'Copying application files'
+  printf 'Copying application files: '
   install -Dm644 "$builddir"/dist/efs-utils.conf "$pkgdir"/etc/amazon/efs/
   install -Dm444 "$builddir"/dist/efs-utils.crt "$pkgdir"/etc/amazon/efs/
   install -Dm755 "$builddir"/src/watchdog/__init__.py "$pkgdir"/usr/bin/amazon-efs-mount-watchdog
   install -Dm755 "$builddir"/src/mount_efs/__init__.py "$pkgdir"/sbin/mount.efs
   install -Dm755 etc/init.d/amazon-efs-mount-watchdog "$pkgdir"/etc/init.d/amazon-efs-mount-watchdog
   sed -i "s/{{ aws_efs_version }}/$pkgver/" "$pkgdir"/etc/init.d/amazon-efs-mount-watchdog
+  printf 'OK\n'
   
-  echo 'Copying documentation files'
+  printf 'Copying documentation files: '
   install -Dm644 "$builddir"/CONTRIBUTING.md "$pkgdir"/usr/share/info/CONTRIBUTING-"$pkgname-$pkgver".md
   install -Dm644 "$builddir"/NOTICE "$pkgdir"/usr/share/info/NOTICE-"$pkgname-$pkgver".md
   install -Dm644 "$builddir"/requirements.txt "$pkgdir"/usr/share/info/REQUIREMENTS-"$pkgname-$pkgver".md
   install -Dm644 "$builddir"/LICENSE "$pkgdir"/usr/share/licenses/LICENSE-"$pkgname-$pkgver"
   install -Dm644 "$builddir"/man/mount.efs.8 "$pkgdir"/usr/share/man/man8/
+  printf 'OK\n'
 }
 sha512sums="e1b0612a46cfcadad12357e483a2fb2d42680f24107b78156506f2cee17cbb74092a64070abaea5e860fc084f36a57517f06d7191e708be925970bc21a38bc2c  efs-utils-1.12.tar.gz
 d7032fb5af15d27d3850f32f628be5af23e33330143c31277a062de7c69868613268f729881febf8f14bca315352182832046521f2e4847bec1ddd8dccdf6903  amazon-efs-mount-watchdog
