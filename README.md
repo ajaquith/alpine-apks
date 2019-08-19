@@ -38,6 +38,30 @@ This package is a re-packaged version of the AWS CloudWatch Logs Agent, which al
 
 The agent does very little; its primary purpose is to start an AWS CLI `logs push` process that runs in the background. The Alpine version of this package is merely an extracted set of config files from the Amazon-supplied installer.
 
+The Alpine package installer performs similarly to the Amazon-supplied installer. It adds an Alpine-compatible `openrc` init script and accompanying environmental config to `/etc/init.d` and `/etc/conf.d`, respectively. It also adds a log rotation config to `/etc/logrotate.d` and a `cron` entry to rotate logs every 30 minutes. Last, it installs a version info script (`/var/awslogs/bin/awslogs-version.sh`).
+
+_Unlike_ the Amazon-supplied installer, the Alpine package installer attempts to install the latest version of Python package `awscli-cwlogs`. It also adds sample AWS and AWS CloudWatch Log Agent configuration files to `/var/awslogs/etc`; these are `aws.conf.example` and `awslogs.conf.example`. If the (non example) `aws.conf` or `awslogs.conf` files do not exist, the package installer prints a warning.
+
+The AWS configuration file `aws.conf` should contain valid values for `region`, `aws_access_key_id` and `aws_secret_access_key`. Ideally, these credentials should belong to an IAM user that possesses only the minimum privileges needed to create log groups and push logs, for example:
+
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents",
+                        "logs:DescribeLogStreams"
+                    ],
+                    "Resource": [
+                        "arn:aws:logs:*:*:*"
+                    ]
+                }
+            ]
+        }
+
 # Building packages
 
 I built all of the packages in this repository using the standard Alpine `abuild` package, using a Docker container to stand up and run the build environment. The Docker image [`craftdock/apk-builder`](https://hub.docker.com/r/craftdock/apk-builder) builds the packages. Each subdirectory contains an APK package to be built, with its own `APKBUILD` file.
