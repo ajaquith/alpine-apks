@@ -18,6 +18,10 @@ This package is an Alpine build of Amazon's [`efs-utils`](https://github.com/aws
 
 The `efs-utils` package provided by Amazon supports Ubuntu, Centos and Debian, but not Alpine. So this package gently modifies the watchdog (`/usr/bin/amazon-efs-mount-watchdog`) and mount helper (`/sbin/mount.efs`). The patch applied to the watchdog enables it to run under Python 3. The patch applied to the mount helper does the same, but also adds the ability to detect Alpine-based systems.
 
+To install the EFS agent, install using the usual Alpine method (`apk`), appending the `arj` repository tag:
+
+        sudo apk add efs-utils@arj
+
 Once installed, EFS volumes can be mounted by Alpine hosts this way:
 
         sudo mount -t efs -o tls file-system-id efs-mount-point/
@@ -27,6 +31,12 @@ Once installed, EFS volumes can be mounted by Alpine hosts this way:
         file-system-id efs-mount-point efs _netdev,tls 0 0
 
 ...where _file-system-id_ is the EFS volume ID and _efs-mount-point_ is the mount point, _eg_ `/opt/foo`.
+
+## awslogs-agent
+
+This package is a re-packaged version of the AWS CloudWatch Logs Agent, which allows Alpine-based AMIs to ship logs to CloudWatch. The agent is [the "older" style agent](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html), rather than the newer unified agent.
+
+The agent does very little; its primary purpose is to start an AWS CLI `logs push` process that runs in the background. The Alpine version of this package is merely an extracted set of config files from the Amazon-supplied installer.
 
 # Building packages
 

@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# Modified from StackOverflow code:
+# https://stackoverflow.com/questions/878600/how-to-create-a-cron-job-using-bash-automatically-without-the-interactive-editor
+#
+set -e
+croncmd='logrotate -s /var/log/logstatus /etc/logrotate.d/awslogs'
+cronjob='30 * * * *'
+( crontab -l | grep -v -F "$croncmd" ; echo "$cronjob $croncmd" ) | crontab -
