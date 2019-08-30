@@ -1,0 +1,40 @@
+# Contributor: Andrew Jaquith <ajaquith@apache.org>
+# Maintainer: Andrew Jaquith <ajaquith@apache.org>
+pkgname=alpine-keys-arj
+pkgver=3.9
+pkgrel=0
+pkgdesc="Alpine Package Signing Keys (includes ARJ keys)"
+url="https://github.com/ajaquith/alpine-apks"
+arch="noarch"
+license="MIT"
+options="!check"
+depends=""
+makedepends=""
+_apkkeyfile="alpine-keys-2.1-r1.apk"
+_arjkey="alpine-devel@markerbench.com-5d56c244.rsa"
+install=""
+source="http://dl-cdn.alpinelinux.org/alpine/v3.9/main/x86_64/$_apkkeyfile
+        http://alpine-apks.markerbench.com/$_arjkey.pub"
+builddir="$srcdir/$pkgname-$pkgver"
+
+unpack() {
+  mkdir -p "$srcdir"/alpine-keys
+  msg "Unpacking keys.."
+	tar -C "$srcdir"/alpine-keys --warning=no-unknown-keyword -xvf "$SRCDEST/$_apkkeyfile" || return 1
+}
+
+package() {
+  printf 'Copying application files: '
+  mkdir -p "$pkgdir"
+  cp -R "$srcdir"/alpine-keys/etc "$pkgdir"/
+  cp -R "$srcdir"/alpine-keys/usr "$pkgdir"/
+  install -Dm644 "$SRCDEST"/"$_arjkey".pub "$pkgdir"/etc/apk/keys/"$_arjkey".pub
+  install -Dm644 "$SRCDEST"/"$_arjkey".pub "$pkgdir"/usr/share/apk/keys/"$_arjkey".pub
+  cd "$pkgdir"/usr/share/apk/keys/x86_64
+  ln -s ../"$_arjkey".pub "$_arjkey".pub
+  cd "$pkgdir"/usr/share/apk/keys/x86
+  ln -s ../"$_arjkey".pub "$_arjkey".pub
+  printf 'OK\n'
+}
+sha512sums="b9838befd6cf7aab4761f20b47271dc797dddef77f3c00a5bca9064b7895c03ab1bcf073a6af314c4911f5258393ce86c359560146bcec2b6e7bc57782cfbb8e  alpine-keys-2.1-r1.apk
+65a6ab0da209602fd536393e1bffa76850595752f630b5e6ea7153e233249f6c89a8bd3cdac00e29ede5ecc1dee75bb3f7544787598603ff96224b12b42ddf50  alpine-devel@markerbench.com-5d56c244.rsa.pub"

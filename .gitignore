@@ -1,6 +1,8 @@
 .git/
+.vagrant/
 .DS_Store
 */config/
 */pkg/
 */src/
 packages/
+distfiles/

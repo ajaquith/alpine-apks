@@ -2,9 +2,8 @@
 # Maintainer: Andrew Jaquith <ajaquith@apache.org>
 pkgname=awslogs-agent
 pkgver=1.4.3
-pkgrel=0
-pkgdesc="Amazon Web Services CloudWatch Logs Agent
-Linux."
+pkgrel=1
+pkgdesc="Amazon Web Services CloudWatch Logs Agent"
 url="https://github.com/ajaquith/alpine-apks"
 arch="noarch"
 license="Amazon Software License"

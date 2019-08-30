@@ -41,4 +41,5 @@ docker run \
         -v $PWD/$1:/package \
         -v $PWD/packages/:/packages \
         -v $PWD/etc/apk/keys:/etc/apk/keys \
-        craftdock/apk-builder abuild $ABUILD_CMD
+        -v $PWD/distfiles:/var/cache/distfiles \
+        craftdock/apk-builder abuild -v -K $ABUILD_CMD
