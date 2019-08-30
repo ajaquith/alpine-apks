@@ -2,7 +2,7 @@
 # Maintainer: Andrew Jaquith <ajaquith@apache.org>
 pkgname=efs-utils
 pkgver=1.12
-pkgrel=1
+pkgrel=2
 pkgdesc="Amazon Web Services Elastic File System Agent"
 url="https://github.com/ajaquith/alpine-apks"
 arch="noarch"
