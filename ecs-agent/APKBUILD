@@ -1,0 +1,111 @@
+# Contributor: Andrew Jaquith <ajaquith@apache.org>
+# Maintainer: Andrew Jaquith <ajaquith@apache.org>
+# source=$pkgname-$pkgver.tar.gz::https://github.com/aws/amazon-ecs-agent/archive/v$pkgver.tar.gz
+pkgname=amazon-ecs-agent
+pkgver=1.29.1
+_gover=1.11.5
+pkgrel=0
+pkgdesc="Amazon Web Services Elastic Container Agent"
+url="https://github.com/ajaquith/alpine-apks"
+arch="noarch"
+license="MIT"
+options="!check"
+depends="iptables"
+makedepends="bash gcc musl-dev openssl go linux-headers"
+install="$pkgname.post-install"
+subpackages=""
+source="$pkgname-$pkgver.zip::https://github.com/aws/amazon-ecs-agent/archive/v$pkgver.zip
+        https://golang.org/dl/go$_gover.src.tar.gz
+        etc/00-amazon-ecs-agent.conf
+        etc/ecs.config
+        etc/init.d/amazon-ecs-agent"
+builddir="$srcdir/$pkgname-$pkgver"
+
+build() {
+  #
+  # Rebuild Go
+  #
+  # See Dockrfile in https://github.com/docker-library/golang alpine3.x container
+  #
+  printf 'Building Go.\n'
+  export GOOS="$(go env GOOS)"
+  export GOARCH="$(go env GOARCH)"
+  export GOHOSTOS="$(go env GOHOSTOS)"
+  export GOHOSTARCH="$(go env GOHOSTARCH)"
+  apkArch="$(apk --print-arch)"; \
+	case "$apkArch" in \
+		armhf) export GOARM='6' ;; \
+		x86) export GO386='387' ;; \
+	esac;
+  export GOROOT="$srcdir"/go
+  export GOPATH="$srcdir"/gopath
+  cd "$srcdir"/go/src
+  ./make.bash
+  
+  #
+  # Build ECS agent
+  #
+  # Note: the recommended AWS way to build the agent is vith
+  # 'go get github.com/aws/amazon-ecs-agent/...'. However, this is not very
+  # Alpine-like because it causes other code to be downloaded. Instead, we want
+  # to build everything from a single archive that we is verifiable using
+  # sha512sums. Therefore we build the agent in a more manual way. The LDFLAGS
+  # var, in particular, needs to be nulled out (instead of '-Wl,--as-needed';
+  # and we soft-link src/github.com/aws/amazon-ecs-agent to point back to src).
+  #
+  export PATH=$GOROOT/bin:$PATH
+  mkdir -p $GOPATH/src/github.com/aws
+  ln -s "$builddir" $GOPATH/src/github.com/aws/amazon-ecs-agent
+  printf 'Creating ECS Agent binary.\n'
+  cd "$builddir"
+  export LDFLAGS=
+  make static
+  
+  #
+  # Manual Alpine build
+  # 
+  # apk add bash gcc musl-dev openssl go linux-headers make
+  # cd /home/vagrant
+  # mkdir -p /package/src
+  # mkdir -p /var/cache/distfiles
+  # curl -L https://github.com/aws/amazon-ecs-agent/archive/v1.29.1.zip > /var/cache/distfiles/amazon-ecs-agent-1.29.1.zip
+  # unzip -n -q /var/cache/distfiles/amazon-ecs-agent-1.29.1.zip -d /package/src
+  # curl -L https://golang.org/dl/go1.11.5.src.tar.gz > /var/cache/distfiles/go1.11.5.src.tar.gz
+  # tar -C /package/src -zxf /var/cache/distfiles/go1.11.5.src.tar.gz
+  # export GOOS="$(go env GOOS)"
+  # export GOARCH="$(go env GOARCH)"
+  # export GOHOSTOS="$(go env GOHOSTOS)"
+  # export GOHOSTARCH="$(go env GOHOSTARCH)"
+  # export GO386='387'
+  # export GOROOT=/package/src/go
+  # export GOPATH=/package/src/gopath
+  # cd /package/src/go/src
+  # ./make.bash
+  # export PATH=$GOROOT/bin:$PATH
+  # mkdir -p $GOPATH/src/github.com/aws
+  # ln -s /package/src/amazon-ecs-agent-1.29.1 $GOPATH/src/github.com/aws/amazon-ecs-agent
+  # cd /package/src/amazon-ecs-agent-1.29.1
+  # export LDFLAGS=
+  # make static
+}
+
+package() {
+  printf 'Creating package directories: '
+  mkdir -p "$pkgdir"/etc/ecs
+  mkdir -p "$pkgdir"/etc/init.d
+  mkdir -p "$pkgdir"/etc/sysctl.d
+  mkdir -p "$pkgdir"/usr/bin
+  printf 'OK\n'
+  printf 'Copying application files: '
+  install -Dm644 etc/ecs.config "$pkgdir"/etc/ecs/
+  install -Dm755 etc/init.d/amazon-ecs-agent "$pkgdir"/etc/init.d/
+  sed -i "s/{{ pkgver }}/$pkgver/" "$pkgdir"/etc/init.d/amazon-ecs-agent
+  install -Dm644 etc/00-amazon-ecs-agent.conf "$pkgdir"/etc/sysctl.d/
+  install -Dm755 "$builddir"/out/amazon-ecs-agent "$pkgdir"/usr/bin/
+  printf 'OK\n'
+}
+sha512sums="7d34fc1e5fd0e784785ae2533e36620123c162d8d06542654811244a2ccec6d27b815a28950c3e96b50fa43f9fb250f65cdf70aa74359909077ba2c387f68d8d  amazon-ecs-agent-1.29.1.zip
+63500238e8d73e4b29279ee3eb9242960de93ccd3b52bacc4009f45cf123cb8edfe5f519d38c5b07bdf2a810925758511ff3255310a056113d0169f78be1d2f6  go1.11.5.src.tar.gz
+adda6201b297a6a6c184164c8820065172b5016d1d6f5ee6967c993305372e7a04dacd22124e890dfd984fcc8e0b59b005e19a531453e7b86a23124f1ec3663c  00-amazon-ecs-agent.conf
+d431da359868ad4380d718c9b3f415fea38588e9cb6725da9e1638e0d01484a6df6a2d59b8d32d0c9c7912d3eb633a0c69e62e10edb5cca63c1f6c4cf6fd1899  ecs.config
+cb4c73fc5310214d035612484157a2a7a3d369f9fb71d8c0998eca0a9f94e2b796d45f5e21957ec265c315fff8c0afb20809933fb84128b6629d63f5cc334b69  amazon-ecs-agent"

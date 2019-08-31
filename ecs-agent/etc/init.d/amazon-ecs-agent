@@ -1,0 +1,24 @@
+#!/sbin/openrc-run
+#
+# AWS Elastic Container Agent service script for Alpine Linux
+#
+# Version: {{ pkgver }}
+#
+# See https://wiki.alpinelinux.org/wiki/Writing_Init_Scripts
+# See https://github.com/OpenRC/openrc/blob/master/service-script-guide.md
+# See https://github.com/OpenRC/openrc/blob/master/supervise-daemon-guide.md
+#
+command="/usr/bin/amazon-ecs-agent"
+command_background=true
+start_stop_daemon_args="-1 /var/log/ecs-agent.log -2 /var/log/ecs-agent.log"
+pidfile="/var/amazon-ecs-agent.pid"
+supervisor=supervise-daemon
+respawn_delay=15
+respawn_max=1
+respawn_period=15
+
+depend() {
+  need networking
+  use network-online
+  provide amazon-ecs-agent
+}

@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# As described in https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-install.html
+#
+
+# Enable container instance to enable IAM roles for tasks
+sudo iptables -t nat -A PREROUTING -p tcp -d 169.254.170.2 --dport 80 -j DNAT --to-destination 127.0.0.1:51679
+sudo iptables -t nat -A OUTPUT -d 169.254.170.2 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 51679
+/etc/init.d/iptables save
+
+# Create data directory
+if [ ! -d "/data" ]
+then
+  mkdir /data
+fi
