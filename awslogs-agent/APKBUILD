@@ -2,13 +2,13 @@
 # Maintainer: Andrew Jaquith <ajaquith@apache.org>
 pkgname=awslogs-agent
 pkgver=1.4.3
-pkgrel=1
+pkgrel=2
 pkgdesc="Amazon Web Services CloudWatch Logs Agent"
 url="https://github.com/ajaquith/alpine-apks"
 arch="noarch"
 license="Amazon Software License"
 options="!check"
-depends="python3"
+depends="python3 curl"
 makedepends=""
 install="$pkgname.pre-install
          $pkgname.post-install
@@ -20,8 +20,7 @@ source="https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-s
         etc/awslogs.confd
         etc/awslogs.logrotated
         etc/awslogs-version.sh
-        etc/aws.conf.example
-        etc/awslogs.conf.example
+        etc/awslogs.conf
         etc/init.d/awslogs
         etc/LICENSE"
 builddir="$srcdir/$pkgname-$pkgver"
@@ -42,8 +41,7 @@ package() {
   install -Dm755 "$startdir"/etc/init.d/awslogs "$pkgdir"/etc/init.d/
   install -Dm644 "$startdir"/etc/awslogs.logrotated "$pkgdir"/etc/logrotate.d/awslogs
   install -Dm755 "$startdir"/etc/awslogs-version.sh "$pkgdir"/var/awslogs/bin/
-  install -Dm600 "$startdir"/etc/aws.conf.example "$pkgdir"/var/awslogs/etc/
-  install -Dm600 "$startdir"/etc/awslogs.conf.example "$pkgdir"/var/awslogs/etc/
+  install -Dm600 "$startdir"/etc/awslogs.conf "$pkgdir"/var/awslogs/etc/
   sed -i "s/{{ pkgver }}/$pkgver/" "$pkgdir"/etc/init.d/awslogs
   sed -i "s/{{ pkgver }}/$pkgver/" "$pkgdir"/etc/logrotate.d/awslogs
   printf 'OK\n'
@@ -56,7 +54,6 @@ sha512sums="75b2776d59bc967cde502eb4e5676b7c34b5b96e8747de4b45e3327d34fba30ea84e
 9d535ca3d3bbb05510e74b0a4acf9524a48ec6d3157f9b5674fafe8e7528693d3746c937e57f99bfd6b876d5ada11c8e0a704d9831073a6fd81c04ca558fbcd6  awslogs.confd
 cdd7d75fc4d1b9bd93a8c73a7030ca9347baff7020234d9a6764fad050c61387ef5c94fe8b1f14dbc603588b05fc6da58a26a25471779efa88796528298dfbfe  awslogs.logrotated
 93cf883acbe373f7b832f9362e28b3f22d753f245845501f88ce164088ab1ad10c0276ddc61d7a589c27903daa7bca45593d11883d4498e3a214d0f1d59654eb  awslogs-version.sh
-2a5e09806035e2e8502393fad643d7133af57871833498b02a1839ecd08b6e4c2f6fa546b93e7929a4dc3941859d741a6382550ace2cd507a3e61e1f22453eac  aws.conf.example
-0fb8a781a6d3fb8dedcdb215f29ab4149310bcd2621e3c40c078ed356ae262207ce9f264d9eb7cb8110fd03b5e9a6e8d895d61d797c199c1e275309a184536a4  awslogs.conf.example
+be96f7a8fee83e58262520f27e5ad1125c6a5889ffb7aef145f055b25bb6c1fea3dbce740224b349b8479f057caec93e341400a188684553752d1bbb45a2b8e2  awslogs.conf
 abc8319015ad8726d22e461ca8730138eda7f0be2d0764578fd8a655f0e983d43084d3e46ba16a84c85d288cd7cdb9aa278e238da286c8dd0a1385c79e0f9021  awslogs
 c79655f756dd5728090891e58559873ec489631db01a57ea4052c60a593f9b9f941117af13c08a70c4354a2cfb48e726087410bd2f0aa6b3f59ffcd722755c4c  LICENSE"

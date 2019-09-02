@@ -44,9 +44,11 @@ To install the AWS Logs Agent, install using the usual Alpine method (`apk`), ap
 
         sudo apk add awslogs-agent@arj
 
-_Unlike_ the Amazon-supplied installer, the Alpine package installer attempts to install the latest version of Python package `awscli-cwlogs`. It also adds sample AWS and AWS CloudWatch Log Agent configuration files to `/var/awslogs/etc`; these are `aws.conf.example` and `awslogs.conf.example`. If the (non example) `aws.conf` or `awslogs.conf` files do not exist, the package installer prints a warning.
+_Unlike_ the Amazon-supplied installer, the Alpine package installer attempts to install the latest version of Python package `awscli-cwlogs`. It also adds default AWS and AWS CloudWatch Log Agent configuration files to `/var/awslogs/etc`; these are `aws.conf` and `awslogs.conf`.
 
-The AWS configuration file `aws.conf` should contain valid values for `region`, `aws_access_key_id` and `aws_secret_access_key`. Ideally, these credentials should belong to an IAM user that possesses only the minimum privileges needed to create log groups and push logs, for example:
+The AWS configuration file `aws.conf` should contain a valid value for `region`, in the `[default]` section. If the EC2 instance has an IAM role that contains appropriate entitlements (see below), no other configuration is needed. If an IAM role is _not_ attached to the EC2 instance, the  `aws_access_key_id` and `aws_secret_access_key` need to be supplied.
+
+In order to push logs, either the IAM role (preferred) or user (less preferred) needs to possess privileges to create log groups and push logs. Here is a sample policy that grants these privileges:
 
         {
             "Version": "2012-10-17",
@@ -65,6 +67,10 @@ The AWS configuration file `aws.conf` should contain valid values for `region`, 
                 }
             ]
         }
+
+As mentioned &mdash; and at the risk of repeating myself &mdash; this policy should be attached to an IAM role, and that role should be attached to the EC2 instance at launch.
+
+The `awslogs.conf` file tells the CloudWatch Logs Agent what to push. With the stock Alpine configuration, this is straightforward because the only `syslog` package included is the BusyBox `syslog`, which logs to a single file, `/var/log/messages`. As a result, the out-of-the-box `awslogs.conf` supplied in this package only pushes `/var/log/messages`. _Note:_ if the Alpine services `klogd` and `crond` are enabled, kernel- and cron-related log lines will be included in `/var/log/messages` and pushed to CloudWatch as well. If you use another `syslog` package, such as `rsyslogd`, add entries to `awslogs.conf` to push additional files as needed.
 
 ## alpine-keys-arj
 
