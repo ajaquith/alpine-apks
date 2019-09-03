@@ -10,7 +10,17 @@ Add my repository to `/etc/apk/repositories`:
 
 Add one or more packages:
 
-        apk add efs-utils@arj
+        apk add aws-docker@arj
+        
+## aws-docker
+
+This meta-package configures an Alpine AMI with the packages necessary to run Docker, the [AWS Elastic Container Service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_agent.html) agent, AWS CloudWatch Logs Agent, and AWS Elastic File System support. It:
+
+- Installs the `efs-utils` package (see below)
+- Installs the `awslogs-agent` package (see below)
+- Installs a Docker daemon configuration file (`/etc/docker/daemon.json`) that sends Docker logs to AWS Cloudwatch
+- Downloads and runs the latest ECS Agent container, starting Docker if it is not already started
+- Adds two `iptables` rules and a sysconfig setting that routes local traffic to the ECS Agent
 
 ## efs-utils
 

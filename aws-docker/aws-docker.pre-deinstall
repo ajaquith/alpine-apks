@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# Teardown for AWS Elastic Container Service Agent
+# See: https://github.com/aws/amazon-ecs-agent
+#
+set -e
+
+# Remove rules to enable IAM roles for tasks, suppressing errors and messages
+/sbin/iptables -t nat -D PREROUTING \
+    -p tcp -d 169.254.170.2 --dport 80 \
+    -j DNAT --to-destination 127.0.0.1:51679 &> /dev/null
+/sbin/iptables -t nat -D OUTPUT \
+    -p tcp -d 169.254.170.2 -m tcp --dport 80 \
+    -j REDIRECT --to-ports 51679 &> /dev/null
+
+# Remove agent and stop Docker, suppressing errors and most messages
+/sbin/service --ifstopped docker start &> /dev/null
+/usr/bin/docker stop ecs-agent &> /dev/null
+/usr/bin/docker rm ecs-agent &> /dev/null
+/usr/bin/docker image prune --force
+/sbin/service docker stop &> /dev/null
+
+# Remove data directory
+rm -rf /var/lib/ecs/data &> /dev/null

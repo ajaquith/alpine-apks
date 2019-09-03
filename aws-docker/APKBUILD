@@ -1,0 +1,36 @@
+# Contributor: Andrew Jaquith <ajaquith@apache.org>
+# Maintainer: Andrew Jaquith <ajaquith@apache.org>
+pkgname=aws-docker
+pkgver=0.5
+pkgrel=1
+pkgdesc="Amazon Web Services optimized Docker config (meta)"
+url="https://github.com/ajaquith/alpine-apks"
+arch="noarch"
+license="MIT"
+options="!check"
+depends="docker awslogs-agent efs-utils iptables curl"
+makedepends=""
+install="$pkgname.post-install
+         $pkgname.pre-deinstall"
+subpackages=""
+source="etc/11-ecs-agent.conf
+        etc/daemon.json
+        etc/ecs.config"
+builddir="$srcdir/$pkgname-$pkgver"
+
+package() {
+  printf 'Creating package directories: '
+  mkdir -p "$pkgdir"/etc/docker
+  mkdir -p "$pkgdir"/etc/ecs
+  mkdir -p "$pkgdir"/etc/sysctl.d
+  printf 'OK\n'
+
+  printf 'Copying application files: '
+  install -Dm644 "$startdir"/etc/daemon.json "$pkgdir"/etc/docker/
+  install -Dm644 "$startdir"/etc/ecs.config "$pkgdir"/etc/ecs/
+  install -Dm644 "$startdir"/etc/11-ecs-agent.conf "$pkgdir"/etc/sysctl.d/
+  printf 'OK\n'
+}
+sha512sums="93416b48d4a300aa066f25cf5f4666a95c443cbd700aeeb241fe4086d9e5854e461579e91e126a3dfc3a20b7a30475a378a78a9e7606913167aeee12e117d22f  11-ecs-agent.conf
+7fc250d6d4d5505bae53359ce4f4476031db59eba1925584523407cb6839f60afefec51b60540d3174e16ebe184ba1bef66d1895b3894f7001e1806c7c38c403  daemon.json
+cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e  ecs.config"
