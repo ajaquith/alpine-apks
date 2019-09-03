@@ -7,6 +7,5 @@ set -e
 croncmd="logrotate -s /var/log/logstatus /etc/logrotate.d/awslogs"
 ( crontab -l | grep -v -F "$croncmd" ) | crontab -
 
-# Remove bin and state dirs
-rm -Rf /var/awslogs/bin
-rm -Rf /var/awslogs/state
+# Remove dirs
+rm -Rf /var/awslogs

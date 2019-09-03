@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Modified from StackOverflow code:
+# Cron code modified from StackOverflow code:
 # https://stackoverflow.com/questions/878600/how-to-create-a-cron-job-using-bash-automatically-without-the-interactive-editor
 #
 set -e
@@ -10,17 +10,9 @@ croncmd='logrotate -s /var/log/logstatus /etc/logrotate.d/awslogs'
 cronjob='30 * * * *'
 ( crontab -l | grep -v -F "$croncmd" ; echo "$cronjob $croncmd" ) | crontab -
 
-# Create AWS conf based on instance's availability zone
+# Configure region in AWS conf based on instance's availability zone
 ec2_region=$(curl -sf http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/')
-cat << EOF > /var/awslogs/etc/aws.conf
-[default]
-region = $ec2_region
-#aws_access_key_id =      # If EC2 instance does NOT have an IAM role attached to it, uncomment these lines
-#aws_secret_access_key =  # and supply credentials. But really, you want an IAM role attached. Yes, you do.
-
-[plugins]
-cwlogs = cwlogs
-EOF
+sed -i "s/{{ ec2_region }}/$ec2_region/" /var/awslogs/etc/aws.conf
 
 # Restart daemon if already started
 /sbin/service --ifstarted awslogs restart &> /dev/null || true
