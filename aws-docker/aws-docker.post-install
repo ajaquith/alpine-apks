@@ -13,26 +13,10 @@ ec2_region=$(curl -sf --connect-timeout 2 http://169.254.169.254/latest/meta-dat
 sed -i "s/{{ ec2_region }}/$ec2_region/" /etc/docker/daemon.json
 
 # Set up necessary rules to enable IAM roles for tasks
-/sbin/iptables -t nat -A PREROUTING \
+iptables -t nat -A PREROUTING \
     -p tcp -d 169.254.170.2 --dport 80 \
     -j DNAT --to-destination 127.0.0.1:51679
-/sbin/iptables -t nat -A OUTPUT \
+iptables -t nat -A OUTPUT \
     -d 169.254.170.2 -p tcp -m tcp --dport 80 \
     -j REDIRECT --to-ports 51679
-/sbin/service iptables save
-
-# Run the agent using the host's network bridge, not Docker's virtual network
-/sbin/service --ifnotstarted docker start &> /dev/null || true
-/usr/bin/docker run --name ecs-agent \
-    --detach=true \
-    --restart=on-failure:10 \
-    --volume=/var/run/docker.sock:/var/run/docker.sock \
-    --volume=/var/log/ecs:/log \
-    --volume=/var/lib/ecs/data:/data \
-    --net=host \
-    --env-file=/etc/ecs/ecs.config \
-    --env=ECS_LOGFILE=/log/ecs-agent.log \
-    --env=ECS_DATADIR=/data/ \
-    --env=ECS_ENABLE_TASK_IAM_ROLE=true \
-    --env=ECS_ENABLE_TASK_IAM_ROLE_NETWORK_HOST=true \
-    amazon/amazon-ecs-agent:latest
+service iptables save

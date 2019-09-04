@@ -3,7 +3,4 @@ set -e
 
 # Configure region in AWS conf based on instance's availability zone
 ec2_region=$(curl -sf --connect-timeout 2 http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/')
-sed -i "s/{{ ec2_region }}/$ec2_region/" /var/awslogs/etc/aws.conf
-
-# Restart daemon if already started
-/sbin/service --ifstarted awslogs restart &> /dev/null || true
+sed -i "s/{{ ec2_region }}/$ec2_region/" /etc/docker/daemon.json

@@ -4,21 +4,30 @@
 # See: https://github.com/aws/amazon-ecs-agent
 #
 set -e
+ECS_CONTAINER="amazon/amazon-ecs-agent:latest"
 
 # Remove rules to enable IAM roles for tasks, suppressing errors and messages
-/sbin/iptables -t nat -D PREROUTING \
+iptables -t nat -D PREROUTING \
     -p tcp -d 169.254.170.2 --dport 80 \
     -j DNAT --to-destination 127.0.0.1:51679 &> /dev/null
-/sbin/iptables -t nat -D OUTPUT \
+iptables -t nat -D OUTPUT \
     -p tcp -d 169.254.170.2 -m tcp --dport 80 \
     -j REDIRECT --to-ports 51679 &> /dev/null
 
-# Remove agent and stop Docker, suppressing errors and most messages
-/sbin/service --ifstopped docker start &> /dev/null
-/usr/bin/docker stop ecs-agent &> /dev/null
-/usr/bin/docker rm ecs-agent &> /dev/null
-/usr/bin/docker image prune --force
-/sbin/service docker stop &> /dev/null
+# Remove agent container, starting Docker if necessary
+docker_running=$(docker info &> /dev/null && echo 'started')
+if [ -z $docker_running ]
+then
+  service docker start
+fi
+ecs_container=$(docker ps --all --filter $ECS_CONTAINER --format "{{.ID}}") 2> /dev/null
+docker stop $ecs_container &> /dev/null
+docker rm $ecs_container &> /dev/null
+docker image prune --force
+if [ -z $docker_running ]
+then
+  service docker stop
+fi
 
 # Remove data directory
 rm -rf /var/lib/ecs/data &> /dev/null

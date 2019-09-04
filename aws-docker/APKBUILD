@@ -2,7 +2,7 @@
 # Maintainer: Andrew Jaquith <ajaquith@apache.org>
 pkgname=aws-docker
 pkgver=0.5
-pkgrel=1
+pkgrel=4
 pkgdesc="Amazon Web Services optimized Docker config (meta)"
 url="https://github.com/ajaquith/alpine-apks"
 arch="noarch"
@@ -11,6 +11,7 @@ options="!check"
 depends="docker awslogs-agent efs-utils iptables curl"
 makedepends=""
 install="$pkgname.post-install
+         $pkgname.post-upgrade
          $pkgname.pre-deinstall"
 subpackages=""
 source="etc/11-ecs-agent.conf

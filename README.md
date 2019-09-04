@@ -19,8 +19,28 @@ This meta-package configures an Alpine AMI with the packages necessary to run Do
 - Installs the `efs-utils` package (see below)
 - Installs the `awslogs-agent` package (see below)
 - Installs a Docker daemon configuration file (`/etc/docker/daemon.json`) that sends Docker logs to AWS Cloudwatch
-- Downloads and runs the latest ECS Agent container, starting Docker if it is not already started
+- Installs a blank ECS configuration file at `/etc/ecs/ecs.config`, which can be edited if the defaults are not sufficient
 - Adds two `iptables` rules and a sysconfig setting that routes local traffic to the ECS Agent
+
+The `aws-docker` package does _not_ actually download and run the ECS Agent container. This should be done after the AMI is provisioned, as described on the [ECS Agent GitHub page](https://github.com/aws/amazon-ecs-agent):
+
+        docker run --name ecs-agent \
+            --detach=true \
+            --restart=on-failure:10 \
+            --volume=/var/run/docker.sock:/var/run/docker.sock \
+            --volume=/var/log/ecs:/log \
+            --volume=/var/lib/ecs/data:/data \
+            --net=host \
+            --env-file=/etc/ecs/ecs.config \
+            --env=ECS_LOGFILE=/log/ecs-agent.log \
+            --env=ECS_DATADIR=/data/ \
+            --env=ECS_ENABLE_TASK_IAM_ROLE=true \
+            --env=ECS_ENABLE_TASK_IAM_ROLE_NETWORK_HOST=true \
+            amazon/amazon-ecs-agent:latest
+
+The AMI instance that `aws-docker` is installed on must have an EC2 instance role associated with it. This role must have the `AmazonEC2ContainerServiceforEC2Role` policy attached to it, as well as entitlements that allow it to push logs to CloudWatch (see the discussion in the `awslogs-agent` package description below).
+
+When the `aws-docker` package is removed, the ECS agent container (`amazon/amazon-ecs-agent:latest`) is stopped and removed.
 
 ## efs-utils
 
