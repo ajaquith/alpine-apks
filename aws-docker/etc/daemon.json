@@ -4,6 +4,6 @@
     "awslogs-region": "{{ ec2_region }}",
     "awslogs-group": "docker",
     "awslogs-create-group": "true",
-    "tag" : "{{.Name}}/{{.ID}}"
+    "tag": "{{.Name}}/{{.ID}}"
   }
 }

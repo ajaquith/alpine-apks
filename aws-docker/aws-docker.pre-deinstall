@@ -2,32 +2,67 @@
 #
 # Teardown for AWS Elastic Container Service Agent
 # See: https://github.com/aws/amazon-ecs-agent
+# See: https://github.com/aws/amazon-ecs-agent/issues/125
 #
 set -e
 ECS_CONTAINER="amazon/amazon-ecs-agent:latest"
+ECS_DATA="/var/lib/ecs/data/ecs_agent_data.json"
+
+# Stop tasks and deregister ECS agent container
+if [[ -e $ECS_DATA ]]
+then
+  CLUSTER=$(jq -r '.Data.Cluster' $ECS_DATA)
+  EC2_REGION=$(jq -r '.Data.availabilityZone' $ECS_DATA | sed 's/\(.*\)[a-z]/\1/')
+  
+  # Stop running tasks
+  RUNNING_TASKS=$(aws ecs list-tasks --region $EC2_REGION --cluster $CLUSTER | jq -r '.taskArns[]')
+  if [[ -n $RUNNING_TASKS ]]
+  then
+    for task in $RUNNING_TASKS
+    do
+      printf "Stopping ECS task $task: "
+      aws ecs stop-task --region $EC2_REGION --cluster $CLUSTER --task $task
+      printf 'OK\n'
+    done
+  fi
+  
+  # Deregister container instances
+  CONTAINER_INSTANCES=$(aws ecs list-container-instances --region $EC2_REGION --cluster $CLUSTER | jq -r '.containerInstanceArns[]')
+  if [[ -n $CONTAINER_INSTANCES ]]
+    then
+    for instance in $CONTAINER_INSTANCES
+    do
+      printf "Deregistering ECS agent container $instance: "
+      aws ecs deregister-container-instance --region $EC2_REGION --cluster $CLUSTER --container-instance $instance
+      printf 'OK\n'
+    done
+  fi
+fi
+
+# Remove agent container, starting Docker if necessary
+DOCKER_IS_RUNNING=$(docker info &> /dev/null && echo 'started')
+if [ -z $DOCKER_IS_RUNNING ]
+then
+  service docker start
+fi
+ECS_CONTAINER_ID=$(docker ps --all --filter "ancestor=$ECS_CONTAINER" --format "{{.ID}}") 2> /dev/null
+docker stop $ECS_CONTAINER_ID &> /dev/null
+docker rm $ECS_CONTAINER_ID &> /dev/null
+docker image prune --force
+if [ -z $DOCKER_IS_RUNNING ]
+then
+  service docker stop
+fi
 
 # Remove rules to enable IAM roles for tasks, suppressing errors and messages
+printf 'Removing iptables rules: '
 iptables -t nat -D PREROUTING \
     -p tcp -d 169.254.170.2 --dport 80 \
     -j DNAT --to-destination 127.0.0.1:51679 &> /dev/null
 iptables -t nat -D OUTPUT \
     -p tcp -d 169.254.170.2 -m tcp --dport 80 \
     -j REDIRECT --to-ports 51679 &> /dev/null
-
-# Remove agent container, starting Docker if necessary
-docker_running=$(docker info &> /dev/null && echo 'started')
-if [ -z $docker_running ]
-then
-  service docker start
-fi
-ecs_container=$(docker ps --all --filter $ECS_CONTAINER --format "{{.ID}}") 2> /dev/null
-docker stop $ecs_container &> /dev/null
-docker rm $ecs_container &> /dev/null
-docker image prune --force
-if [ -z $docker_running ]
-then
-  service docker stop
-fi
+printf 'OK\n'
 
 # Remove data directory
 rm -rf /var/lib/ecs/data &> /dev/null
