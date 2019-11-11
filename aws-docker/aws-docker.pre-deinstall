@@ -29,7 +29,7 @@ then
   # Deregister container instances
   CONTAINER_INSTANCES=$(aws ecs list-container-instances --region $EC2_REGION --cluster $CLUSTER | jq -r '.containerInstanceArns[]')
   if [[ -n $CONTAINER_INSTANCES ]]
-    then
+  then
     for instance in $CONTAINER_INSTANCES
     do
       printf "Deregistering ECS agent container $instance: "
